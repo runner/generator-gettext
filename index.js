@@ -9,7 +9,8 @@ var fs    = require('fs'),
     path  = require('path'),
     exec  = require('child_process').exec,
     name  = 'gettext',
-    log   = require('@runner/logger').wrap(name);
+    log   = require('@runner/logger').wrap(name),
+    tools = require('@runner/tools');
 
 
 function po2js ( config, poFile, jsonFile ) {
@@ -153,20 +154,22 @@ function msgmerge ( config, langName, potFile, poFile, callback ) {
 
 function xgettext ( config, callback ) {
     var dstFile = path.join(config.source, 'messages.pot'),
-        load    = require('require-nocache')(module),
-        pkgInfo = load(path.join(process.cwd(), 'package.json')),
         title   = 'xgettext',
-        params  = [
-            'xgettext',
-            '--force-po',
-            '--output="' + dstFile + '"',
-            '--language="JavaScript"',
-            '--from-code="' + config.fromCode + '"',
-            '--package-name="' + pkgInfo.name + '"',
-            '--package-version="' + pkgInfo.version + '"',
-            '--msgid-bugs-address="' + (pkgInfo.author.email ? pkgInfo.author.email : pkgInfo.author) + '"'
-        ],
-        command;
+        pkgInfo, params, command;
+
+    delete require.cache[path.join(process.cwd(), 'package.json')];
+    pkgInfo = require(path.join(process.cwd(), 'package.json'));
+
+    params = [
+        'xgettext',
+        '--force-po',
+        '--output="' + dstFile + '"',
+        '--language="JavaScript"',
+        '--from-code="' + config.fromCode + '"',
+        '--package-name="' + pkgInfo.name + '"',
+        '--package-version="' + pkgInfo.version + '"',
+        '--msgid-bugs-address="' + (pkgInfo.author.email ? pkgInfo.author.email : pkgInfo.author) + '"'
+    ];
 
     // optional flags
     if ( config.indent      ) { params.push('--indent'); }
@@ -260,6 +263,17 @@ function build ( config, done ) {
             }
         });
     });
+}
+
+
+function clear ( config, done ) {
+    var files = [];
+
+    config.languages.forEach(function ( language ) {
+        files.push(path.resolve(config.target, language + '.json'));
+    });
+
+    tools.unlink(files, log, done);
 }
 
 

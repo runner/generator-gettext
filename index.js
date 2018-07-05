@@ -106,7 +106,7 @@ function msgmerge ( config, langName, potFile, poFile, callback ) {
     var msgmerge = [
             'msgmerge',
             '--update',
-            '--quiet', // Suppress progress indicators.
+            '--quiet',  // suppress progress indicators
             '--verbose'
         ],
         command;

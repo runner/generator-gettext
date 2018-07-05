@@ -9,10 +9,20 @@ var fs    = require('fs'),
     path  = require('path'),
     exec  = require('child_process').exec,
     name  = 'gettext',
-    log   = require('@runner/logger').wrap(name);
+    log   = require('@runner/logger').wrap(name),
+    tools = require('@runner/tools');
 
 
-function po2js ( config, poFile, jsonFile ) {
+function standardChannelsHandle ( stdout, stderr ) {
+    (stdout + stderr).trim().split('\n').forEach(function ( line ) {
+        if ( line.length !== 0) {
+            log.info(line);
+        }
+    });
+}
+
+
+function po2js ( config, poFile, jsonFile, callback ) {
     var jsonDir  = config.target,
         po       = require('gettext-parser').po.parse(fs.readFileSync(poFile, {encoding: 'utf8'})),
         contexts = po.translations,
@@ -46,20 +56,14 @@ function po2js ( config, poFile, jsonFile ) {
 
     });
 
-    if ( !fs.existsSync(jsonDir) ) {
-        fs.mkdirSync(jsonDir);
-    }
-
-    // store js file
-    fs.writeFileSync(jsonFile, JSON.stringify(result, null, '\t'), {encoding: 'utf8'});
-
-    return result;
+    tools.mkdir([jsonDir], log, function () {
+        tools.write([{name: jsonFile, data: JSON.stringify(result, null, '\t')}], log, callback);
+    });
 }
 
 
 function msginit ( config, langName, potFile, poFile, callback ) {
-    var title  = 'msginit ',
-        params = [
+    var params = [
             'msginit',
             '--input="'  + potFile  + '"',
             '--output="' + poFile   + '"',
@@ -74,38 +78,35 @@ function msginit ( config, langName, potFile, poFile, callback ) {
     // final exec line
     command = params.join(' ');
 
+    if ( config.verbose ) {
+        log.info('exec', command);
+    }
+
     exec(command, function ( error, stdout, stderr ) {
         if ( error ) {
-            // profile.notify({
-            //     info: error.toString().trim(),
-            //     type: 'fail',
-            //     tags: [self.entry, title],
-            //     data: {command: command}
-            // });
-        } else {
-            (stdout + stderr).trim().split('\n').forEach(function ( line ) {
-                console.log(title, line);
-            });
-
-            // Content-Type: text/plain; charset=UTF-8
-            fs.writeFileSync(poFile,
-                fs.readFileSync(poFile, {encoding: 'utf8'}).replace(
-                    'Content-Type: text/plain; charset=ASCII',
-                    'Content-Type: text/plain; charset=UTF-8'
-                )
-            );
+            log.fail(error.toString());
         }
 
-        callback(error);
+        standardChannelsHandle(stdout, stderr);
+
+        /* eslint-disable-next-line handle-callback-err */
+        tools.read(poFile, log, function ( error, data ) {
+            data.replace(
+                'Content-Type: text/plain; charset=ASCII',
+                'Content-Type: text/plain; charset=UTF-8'
+            );
+
+            tools.write([{name: poFile, data: data}], log, callback);
+        });
     });
 }
 
 
 function msgmerge ( config, langName, potFile, poFile, callback ) {
-    var title    = 'msgmerge',
-        msgmerge = [
+    var msgmerge = [
             'msgmerge',
             '--update',
+            '--quiet', // Suppress progress indicators.
             '--verbose'
         ],
         command;
@@ -125,48 +126,39 @@ function msgmerge ( config, langName, potFile, poFile, callback ) {
     command = msgmerge.join(' ');
 
     if ( config.verbose ) {
-        console.log(title, command);
+        log.info('exec', command);
     }
 
     exec(command, function ( error, stdout, stderr ) {
-        /* eslint no-unused-vars: 0 */
-
         if ( error ) {
-            // profile.notify({
-            //     info: error.toString().trim(),
-            //     type: 'fail',
-            //     tags: [self.entry, title],
-            //     data: {command: command}
-            // });
-        } else {
-            // profile.notify({
-            //     info: stderr.trim().split('\n')[1],
-            //     tags: [self.entry, title, langName],
-            //     data: {command: command}
-            // });
+            log.fail(error.toString());
         }
 
-        callback(error);
+        standardChannelsHandle(stdout, stderr);
+
+        callback();
     });
 }
 
 
 function xgettext ( config, callback ) {
     var dstFile = path.join(config.source, 'messages.pot'),
-        load    = require('require-nocache')(module),
-        pkgInfo = load(path.join(process.cwd(), 'package.json')),
-        title   = 'xgettext',
-        params  = [
-            'xgettext',
-            '--force-po',
-            '--output="' + dstFile + '"',
-            '--language="JavaScript"',
-            '--from-code="' + config.fromCode + '"',
-            '--package-name="' + pkgInfo.name + '"',
-            '--package-version="' + pkgInfo.version + '"',
-            '--msgid-bugs-address="' + (pkgInfo.author.email ? pkgInfo.author.email : pkgInfo.author) + '"'
-        ],
-        command;
+        pkgPath = path.join(process.cwd(), 'package.json'),
+        pkgInfo, params, command;
+
+    delete require.cache[pkgPath];
+    pkgInfo = require(pkgPath);
+
+    params = [
+        'xgettext',
+        '--force-po',
+        '--output="' + dstFile + '"',
+        '--language="JavaScript"',
+        '--from-code="' + config.fromCode + '"',
+        '--package-name="' + pkgInfo.name + '"',
+        '--package-version="' + pkgInfo.version + '"',
+        '--msgid-bugs-address="' + (pkgInfo.author.email ? pkgInfo.author.email : pkgInfo.author) + '"'
+    ];
 
     // optional flags
     if ( config.indent      ) { params.push('--indent'); }
@@ -183,41 +175,18 @@ function xgettext ( config, callback ) {
     // final exec line
     command = params.join(' ');
 
-    console.log(command);
+    if ( config.verbose ) {
+        log.info('exec', command);
+    }
 
     exec(command, function ( error, stdout, stderr ) {
         if ( error ) {
-            // profile.notify({
-            //     info: error.toString().trim(),
-            //     type: 'fail',
-            //     tags: [self.entry, title],
-            //     data: {command: command}
-            // });
-            //console.log(error);
-            log.fail(error.toString().trim());
-
             callback(error);
 
             return;
         }
 
-        if ( stdout ) {
-            stdout.trim().split('\n').forEach(function ( line ) {
-                console.log(title, line);
-            });
-        }
-
-        if ( stderr ) {
-            stderr.trim().split('\n').forEach(function ( line ) {
-                console.log(title, line);
-            });
-        }
-
-        // profile.notify({
-        //     info: 'write ' + dstFile,
-        //     tags: [self.entry, title],
-        //     data: {command: command}
-        // });
+        standardChannelsHandle(stdout, stderr);
 
         callback(error, dstFile);
     });
@@ -226,18 +195,17 @@ function xgettext ( config, callback ) {
 
 function build ( config, done ) {
     xgettext(config, function ( error, potFile ) {
-        var runCount = 0,
-            fnDone   = function ( poFile, jsonFile ) {
-                runCount++;
-
-                po2js(config, poFile, jsonFile);
-
-                if ( runCount >= config.languages.length ) {
-                    done();
-                }
+        var runCount  = 0,
+            fnDone    = function ( poFile, jsonFile ) {
+                po2js(config, poFile, jsonFile, function () {
+                    if ( ++runCount >= config.languages.length ) {
+                        done();
+                    }
+                });
             };
 
         if ( error ) {
+            log.fail(error.toString());
             done();
 
             return;
@@ -263,16 +231,27 @@ function build ( config, done ) {
 }
 
 
+function clear ( config, done ) {
+    var files = [];
+
+    config.languages.forEach(function ( language ) {
+        files.push(path.join(config.target, language + '.json'));
+    });
+
+    tools.unlink(files, log, done);
+}
+
+
 function generator ( config, options ) {
     var tasks = {};
 
     // sanitize and extend defaults
     config = Object.assign({
         // dir with po and pot files
-        source: undefined,
+        source: '.',
 
         // directory with generated localization json files
-        target: undefined,
+        target: '.',
 
         // javascript source file
         jsData: undefined,

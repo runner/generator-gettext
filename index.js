@@ -106,7 +106,7 @@ function msgmerge ( config, langName, potFile, poFile, callback ) {
     var msgmerge = [
             'msgmerge',
             '--update',
-            '--quiet', // Suppress progress indicators.
+            '--quiet',  // suppress progress indicators
             '--verbose'
         ],
         command;
@@ -169,8 +169,21 @@ function xgettext ( config, callback ) {
     if ( config.sortByFile  ) { params.push('--sort-by-file'); }
     if ( config.addComments ) { params.push('--add-comments="' + config.addComments + '"'); }
 
-    // input file
-    params.push(config.jsData);
+    /* eslint-disable-next-line consistent-return*/
+    function fillParams ( module ) {
+        if ( fs.statSync(module).isDirectory() ) {
+            fs.readdirSync(module).forEach(function ( item ) {
+                fillParams(path.join(module, item));
+            });
+        } else {
+            params.push(module);
+        }
+    }
+
+    // add input files to params
+    config.jsData.forEach(function ( module ) {
+        fillParams(module);
+    });
 
     // final exec line
     command = params.join(' ');
@@ -195,8 +208,8 @@ function xgettext ( config, callback ) {
 
 function build ( config, done ) {
     xgettext(config, function ( error, potFile ) {
-        var runCount  = 0,
-            fnDone    = function ( poFile, jsonFile ) {
+        var runCount = 0,
+            fnDone   = function ( poFile, jsonFile ) {
                 po2js(config, poFile, jsonFile, function () {
                     if ( ++runCount >= config.languages.length ) {
                         done();
@@ -254,7 +267,7 @@ function generator ( config, options ) {
         target: '.',
 
         // javascript source file
-        jsData: undefined,
+        jsData: null,
 
         // list of language codes in ISO 639-1 format to generate localization files for
         languages: [],

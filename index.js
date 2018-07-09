@@ -22,9 +22,8 @@ function standardChannelsHandle ( stdout, stderr ) {
 }
 
 
-function po2js ( config, poFile, jsonFile, callback ) {
-    var jsonDir  = config.target,
-        po       = require('gettext-parser').po.parse(fs.readFileSync(poFile, {encoding: 'utf8'})),
+function po2js ( poFile, jsonFile, callback ) {
+    var po       = require('gettext-parser').po.parse(fs.readFileSync(poFile, {encoding: 'utf8'})),
         contexts = po.translations,
         result   = {
             meta: {
@@ -56,9 +55,7 @@ function po2js ( config, poFile, jsonFile, callback ) {
 
     });
 
-    tools.mkdir([jsonDir], log, function () {
-        tools.write([{name: jsonFile, data: JSON.stringify(result, null, '\t')}], log, callback);
-    });
+    tools.write([{name: jsonFile, data: JSON.stringify(result, null, '\t')}], log, callback);
 }
 
 
@@ -91,7 +88,7 @@ function msginit ( config, langName, potFile, poFile, callback ) {
 
         /* eslint-disable-next-line handle-callback-err */
         tools.read(poFile, log, function ( error, data ) {
-            data.replace(
+            data.toString().replace(
                 'Content-Type: text/plain; charset=ASCII',
                 'Content-Type: text/plain; charset=UTF-8'
             );
@@ -209,7 +206,7 @@ function build ( config, done ) {
     xgettext(config, function ( error, potFile ) {
         var runCount = 0,
             fnDone   = function ( poFile, jsonFile ) {
-                po2js(config, poFile, jsonFile, function () {
+                po2js( poFile, jsonFile, function () {
                     if ( ++runCount >= config.languages.length ) {
                         done();
                     }

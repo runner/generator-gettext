@@ -206,7 +206,7 @@ function build ( config, done ) {
     xgettext(config, function ( error, potFile ) {
         var runCount = 0,
             fnDone   = function ( poFile, jsonFile ) {
-                po2js( poFile, jsonFile, function () {
+                po2js(poFile, jsonFile, function () {
                     if ( ++runCount >= config.languages.length ) {
                         done();
                     }

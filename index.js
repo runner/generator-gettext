@@ -203,40 +203,47 @@ function xgettext ( config, callback ) {
 
 
 function build ( config, done ) {
-    xgettext(config, function ( error, potFile ) {
-        var runCount = 0,
-            fnDone   = function ( poFile, jsonFile ) {
-                po2js(poFile, jsonFile, function () {
-                    if ( ++runCount >= config.languages.length ) {
-                        done();
-                    }
-                });
-            };
+    if ( Array.isArray(config.languages) && config.languages.length
+        && Array.isArray(config.jsData) && config.jsData.length
+    ) {
+        xgettext(config, function ( error, potFile ) {
+            var runCount = 0,
+                fnDone   = function ( poFile, jsonFile ) {
+                    po2js(poFile, jsonFile, function () {
+                        if ( ++runCount >= config.languages.length ) {
+                            done();
+                        }
+                    });
+                };
 
-        if ( error ) {
-            log.fail(error.toString());
-            done();
+            if ( error ) {
+                log.fail(error.toString());
+                done();
 
-            return;
-        }
-
-        config.languages.forEach(function ( langName ) {
-            var poFile   = path.join(config.source, langName + '.po'),
-                jsonFile = path.join(config.target, langName + '.json');
-
-            if ( fs.existsSync(poFile) ) {
-                // merge existing pot and po files
-                msgmerge(config, langName, potFile, poFile, function () {
-                    fnDone(poFile, jsonFile);
-                });
-            } else {
-                // create a new lang file
-                msginit(config, langName, potFile, poFile, function () {
-                    fnDone(poFile, jsonFile);
-                });
+                return;
             }
+
+            config.languages.forEach(function ( langName ) {
+                var poFile   = path.join(config.source, langName + '.po'),
+                    jsonFile = path.join(config.target, langName + '.json');
+
+                if ( fs.existsSync(poFile) ) {
+                    // merge existing pot and po files
+                    msgmerge(config, langName, potFile, poFile, function () {
+                        fnDone(poFile, jsonFile);
+                    });
+                } else {
+                    // create a new lang file
+                    msginit(config, langName, potFile, poFile, function () {
+                        fnDone(poFile, jsonFile);
+                    });
+                }
+            });
         });
-    });
+    } else {
+        log.info('no valid config options (check generator configuration)');
+        done();
+    }
 }
 
 
@@ -262,8 +269,8 @@ function generator ( config, options ) {
         // directory with generated localization json files
         target: '.',
 
-        // javascript source file
-        jsData: null,
+        // javascript source files
+        jsData: [],
 
         // list of language codes in ISO 639-1 format to generate localization files for
         languages: [],

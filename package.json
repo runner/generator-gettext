@@ -19,11 +19,11 @@
     },
     "dependencies": {
         "@runner/logger": "^1.0.0",
+        "@runner/tools": "^1.2.0",
         "gettext-parser": "^2.0.0"
     },
     "devDependencies": {
         "@cjssdk/eslint-config": "^1.1.2",
-        "@runner/tools": "^1.2.0",
         "eslint": "^4.19.1"
     },
     "keywords": [

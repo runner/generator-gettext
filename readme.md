@@ -2,17 +2,17 @@ Tasks generator for gettext
 ===========================
 
 [![build status](https://img.shields.io/travis/runner/generator-gettext.svg?style=flat-square)](https://travis-ci.org/runner/generator-gettext)
-[![npm version](https://img.shields.io/npm/v/@runner/generator-gettext.svg?style=flat-square)](https://www.npmjs.com/package/@runner/generator-gettext)
+[![npm version](https://img.shields.io/npm/v/runner-generator-gettext.svg?style=flat-square)](https://www.npmjs.com/package/runner-generator-gettext)
 [![dependencies status](https://img.shields.io/david/runner/generator-gettext.svg?style=flat-square)](https://david-dm.org/runner/generator-gettext)
 [![devDependencies status](https://img.shields.io/david/dev/runner/generator-gettext.svg?style=flat-square)](https://david-dm.org/runner/generator-gettext?type=dev)
 [![Gitter](https://img.shields.io/badge/gitter-join%20chat-blue.svg?style=flat-square)](https://gitter.im/DarkPark/runner)
-[![RunKit](https://img.shields.io/badge/RunKit-try-yellow.svg?style=flat-square)](https://npm.runkit.com/@runner/generator-gettext)
+[![RunKit](https://img.shields.io/badge/RunKit-try-yellow.svg?style=flat-square)](https://npm.runkit.com/runner-generator-gettext)
 
 
 ## Installation ##
 
 ```bash
-npm install @runner/generator-gettext
+npm install runner-generator-gettext
 ```
 
 
@@ -21,7 +21,7 @@ npm install @runner/generator-gettext
 Add to the scope:
 
 ```js
-var generator = require('@runner/generator-gettext');
+var generator = require('runner-generator-gettext');
 ```
 
 Generate tasks according to the given config:
@@ -110,4 +110,4 @@ according to the contribution [rules](.github/contributing.md).
 
 ## License ##
 
-`@runner/generator-gettext` is released under the [GPL-3.0 License](http://opensource.org/licenses/GPL-3.0).
+`runner-generator-gettext` is released under the [GPL-3.0 License](http://opensource.org/licenses/GPL-3.0).

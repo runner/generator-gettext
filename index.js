@@ -9,8 +9,8 @@ var fs    = require('fs'),
     path  = require('path'),
     exec  = require('child_process').exec,
     name  = 'gettext',
-    log   = require('@runner/logger').wrap(name),
-    tools = require('@runner/tools');
+    log   = require('runner-logger').wrap(name),
+    tools = require('runner-tools');
 
 
 function standardChannelsHandle ( stdout, stderr ) {

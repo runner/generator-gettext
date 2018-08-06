@@ -1,5 +1,5 @@
 {
-    "name": "@runner/generator-gettext",
+    "name": "runner-generator-gettext",
     "version": "1.2.0",
     "description": "Tasks generator for gettext internationalization and localization system.",
     "author": {
@@ -10,17 +10,14 @@
         "type": "git",
         "url": "https://github.com/runner/generator-gettext.git"
     },
-    "publishConfig": {
-        "access": "public"
-    },
     "scripts": {
         "lint": "eslint .",
         "test": "npm run lint"
     },
     "dependencies": {
-        "@runner/logger": "^1.0.0",
-        "@runner/tools": "^1.2.0",
-        "gettext-parser": "^2.0.0"
+        "gettext-parser": "^2.0.0",
+        "runner-logger": "^1.0.0",
+        "runner-tools": "^1.2.0"
     },
     "devDependencies": {
         "cjs-eslint": "^1.1.1"

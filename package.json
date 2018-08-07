@@ -1,6 +1,6 @@
 {
     "name": "runner-generator-gettext",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Tasks generator for gettext internationalization and localization system.",
     "author": {
         "name": "Stanislav Kalashnik",
@@ -16,8 +16,8 @@
     },
     "dependencies": {
         "gettext-parser": "^2.0.0",
-        "runner-logger": "^1.0.0",
-        "runner-tools": "^1.2.0"
+        "runner-logger": "^1.0.1",
+        "runner-tools": "^1.2.1"
     },
     "devDependencies": {
         "cjs-eslint": "^1.1.1"

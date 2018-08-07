@@ -100,27 +100,26 @@ function msginit ( config, langName, potFile, poFile, callback ) {
 
 
 function msgmerge ( config, langName, potFile, poFile, callback ) {
-    var msgmerge = [
-            'msgmerge',
-            '--update',
-            '--quiet',  // suppress progress indicators
-            '--verbose'
-        ],
-        command;
+    var command = [
+        'msgmerge',
+        '--update',
+        '--quiet',
+        '--verbose'
+    ];
 
     // optional flags
-    if ( config.indent     ) { msgmerge.push('--indent'); }
-    if ( config.noLocation ) { msgmerge.push('--no-location'); }
-    if ( config.noWrap     ) { msgmerge.push('--no-wrap'); }
-    if ( config.sortOutput ) { msgmerge.push('--sort-output'); }
-    if ( config.sortByFile ) { msgmerge.push('--sort-by-file'); }
+    if ( config.indent     ) { command.push('--indent'); }
+    if ( config.noLocation ) { command.push('--no-location'); }
+    if ( config.noWrap     ) { command.push('--no-wrap'); }
+    if ( config.sortOutput ) { command.push('--sort-output'); }
+    if ( config.sortByFile ) { command.push('--sort-by-file'); }
 
     // merge
-    msgmerge.push(poFile);
-    msgmerge.push(potFile);
+    command.push(poFile);
+    command.push(potFile);
 
     // final exec line
-    command = msgmerge.join(' ');
+    command = command.join(' ');
 
     if ( config.verbose ) {
         log.info('exec', command);
@@ -166,20 +165,18 @@ function xgettext ( config, callback ) {
     if ( config.sortByFile  ) { params.push('--sort-by-file'); }
     if ( config.addComments ) { params.push('--add-comments="' + config.addComments + '"'); }
 
-    function scanPath ( module ) {
-        if ( fs.statSync(module).isDirectory() ) {
-            fs.readdirSync(module).forEach(function ( item ) {
-                scanPath(path.join(module, item));
+    function scanPath ( fsPath ) {
+        if ( fs.statSync(fsPath).isDirectory() ) {
+            fs.readdirSync(fsPath).forEach(function ( item ) {
+                scanPath(path.join(fsPath, item));
             });
         } else {
-            params.push(module);
+            params.push(fsPath);
         }
     }
 
     // add input files to the params
-    config.jsData.forEach(function ( module ) {
-        scanPath(module);
-    });
+    config.jsData.forEach(scanPath);
 
     // final exec line
     command = params.join(' ');

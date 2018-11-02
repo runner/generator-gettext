@@ -31,7 +31,7 @@ var tasks = generator({
     languages: ['fr', 'de'],
     source: 'src/lang',
     target: 'build/develop/lang',
-    jsData: 'build/develop/main.js'    
+    jsData: ['build/develop/main.js']    
 });
 ```
 

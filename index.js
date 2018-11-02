@@ -105,7 +105,7 @@ function msgmerge ( config, langName, potFile, poFile, callback ) {
         '--update',
         '--quiet',
         '--verbose',
-        '--backup="off"',
+        '--backup="off"'
     ];
 
     // optional flags

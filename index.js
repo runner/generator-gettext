@@ -260,7 +260,7 @@ function generator ( config, options ) {
     var tasks = {};
 
     // sanitize and extend defaults
-    config = Object.assign({
+    generator.config = config = Object.assign({
         // dir with po and pot files
         source: '.',
 

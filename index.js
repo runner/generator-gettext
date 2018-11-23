@@ -22,7 +22,7 @@ function standardChannelsHandle ( stdout, stderr ) {
 }
 
 
-function po2js ( poFile, jsonFile, callback ) {
+function po2js ( poFile, jsonFile, compact, callback ) {
     var po       = require('gettext-parser').po.parse(fs.readFileSync(poFile, {encoding: 'utf8'})),
         contexts = po.translations,
         result   = {
@@ -55,7 +55,11 @@ function po2js ( poFile, jsonFile, callback ) {
 
     });
 
-    tools.write([{name: jsonFile, data: JSON.stringify(result, null, '\t')}], log, callback);
+    if ( compact ) {
+        tools.write([{name: jsonFile, data: JSON.stringify(result)}], log, callback);
+    } else {
+        tools.write([{name: jsonFile, data: JSON.stringify(result, null, '    ')}], log, callback);
+    }
 }
 
 
@@ -207,7 +211,7 @@ function build ( config, done ) {
         xgettext(config, function ( error, potFile ) {
             var runCount = 0,
                 fnDone   = function ( poFile, jsonFile ) {
-                    po2js(poFile, jsonFile, function () {
+                    po2js(poFile, jsonFile, config.compact, function () {
                         if ( ++runCount >= config.languages.length ) {
                             done();
                         }
@@ -313,7 +317,10 @@ function generator ( config, options ) {
 
         // Increase verbosity level.
         // @flag --verbose
-        verbose: false
+        verbose: false,
+
+        // generated json file mode
+        compact: false
     }, config || {});
     options = Object.assign(generator.options, options || {});
 

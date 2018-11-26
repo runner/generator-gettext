@@ -15,7 +15,8 @@
         "test": "npm run lint"
     },
     "dependencies": {
-        "gettext-parser": "^2.0.0",
+        "cjs-async": "^1.6.0",
+        "gettext-parser": "^3.1.0",
         "runner-logger": "^1.0.1",
         "runner-tools": "^1.2.1"
     },

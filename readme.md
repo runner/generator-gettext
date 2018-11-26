@@ -48,7 +48,9 @@ The following tasks will become available:
  Task name        | Description
 ------------------|-------------
  `gettext:config` | prints the current configuration used for generated tasks
- `gettext:build`  | performs language files compilation 
+ `gettext:exec`   | performs `.po` and `.pot` files generation 
+ `gettext:json`   | performs `.json` files generation
+ `gettext:build`  | executes `gettext:exec` and `gettext:json` tasks
  `gettext:clear`  | removes compiled file
 
 Generator accepts two arguments: base configuration and additional options.
@@ -98,6 +100,8 @@ Object.assign(runner.tasks,
 It will add the following tasks:
 
 * `lang:config:develop` 
+* `lang:exec:develop`  
+* `lang:json:develop`  
 * `lang:build:develop`  
 * `lang:clear:develop`  
  

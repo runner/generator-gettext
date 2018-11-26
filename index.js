@@ -5,17 +5,18 @@
 
 'use strict';
 
-var fs    = require('fs'),
-    path  = require('path'),
-    exec  = require('child_process').exec,
-    name  = 'gettext',
-    log   = require('runner-logger').wrap(name),
-    tools = require('runner-tools');
+var fs     = require('fs'),
+    path   = require('path'),
+    exec   = require('child_process').exec,
+    serial = require('cjs-async').serial,
+    name   = 'gettext',
+    log    = require('runner-logger').wrap(name),
+    tools  = require('runner-tools');
 
 
 function standardChannelsHandle ( stdout, stderr ) {
     (stdout + stderr).trim().split('\n').forEach(function ( line ) {
-        if ( line.length !== 0) {
+        if ( line.length !== 0 ) {
             log.info(line);
         }
     });
@@ -204,20 +205,12 @@ function xgettext ( config, callback ) {
 }
 
 
-function build ( config, done ) {
-    if ( Array.isArray(config.languages) && config.languages.length
-        && Array.isArray(config.jsData) && config.jsData.length
+function execPo ( config, done ) {
+    if (
+        Array.isArray(config.languages) && config.languages.length &&
+        Array.isArray(config.jsData) && config.jsData.length
     ) {
         xgettext(config, function ( error, potFile ) {
-            var runCount = 0,
-                fnDone   = function ( poFile, jsonFile ) {
-                    po2js(poFile, jsonFile, config.compact, function () {
-                        if ( ++runCount >= config.languages.length ) {
-                            done();
-                        }
-                    });
-                };
-
             if ( error ) {
                 log.fail(error.toString());
                 done();
@@ -225,27 +218,51 @@ function build ( config, done ) {
                 return;
             }
 
-            config.languages.forEach(function ( langName ) {
-                var poFile   = path.join(config.source, langName + '.po'),
-                    jsonFile = path.join(config.target, langName + '.json');
+            serial(config.languages.map(function ( language ) {
+                var poFile = path.join(config.source, language + '.po');
 
-                if ( fs.existsSync(poFile) ) {
-                    // merge existing pot and po files
-                    msgmerge(config, langName, potFile, poFile, function () {
-                        fnDone(poFile, jsonFile);
-                    });
-                } else {
-                    // create a new lang file
-                    msginit(config, langName, potFile, poFile, function () {
-                        fnDone(poFile, jsonFile);
+                return function ( result ) {
+                    fs.exists(poFile, function ( exists ) {
+                        if ( exists ) {
+                            // merge existing pot and po files
+                            msgmerge(config, language, potFile, poFile, function () {
+                                result(null);
+                            });
+                        } else {
+                            // create a new lang file
+                            msginit(config, language, potFile, poFile, function () {
+                                result(null);
+                            });
+                        }
                     });
                 }
-            });
+            }), done);
         });
     } else {
         log.info('no valid config options (check generator configuration)');
         done();
     }
+}
+
+
+function json ( config, done ) {
+    serial(config.languages.map(function ( language ) {
+        var poFile   = path.join(config.source, language + '.po'),
+            jsonFile = path.join(config.target, language + '.json');
+
+        return function ( result ) {
+            po2js(poFile, jsonFile, config.compact, function () {
+                result(null);
+            });
+        }
+    }), done);
+}
+
+
+function build ( config, done ) {
+    execPo(config, function () {
+        json(config, done);
+    })
 }
 
 
@@ -330,6 +347,14 @@ function generator ( config, options ) {
 
     tasks[options.prefix + 'build' + options.suffix] = function ( done ) {
         build(config, done);
+    };
+
+    tasks[options.prefix + 'exec' + options.suffix] = function ( done ) {
+        execPo(config, done);
+    };
+
+    tasks[options.prefix + 'json' + options.suffix] = function ( done ) {
+        json(config, done);
     };
 
     tasks[options.prefix + 'clear' + options.suffix] = function ( done ) {

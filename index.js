@@ -64,12 +64,12 @@ function po2js ( poFile, jsonFile, compact, callback ) {
 }
 
 
-function msginit ( config, langName, potFile, poFile, callback ) {
+function msginit ( config, potFile, poFile, language, callback ) {
     var params = [
             'msginit',
             '--input="'  + potFile  + '"',
             '--output="' + poFile   + '"',
-            '--locale="' + langName + '"',
+            '--locale="' + language + '"',
             '--no-translator'
         ],
         command;
@@ -104,7 +104,7 @@ function msginit ( config, langName, potFile, poFile, callback ) {
 }
 
 
-function msgmerge ( config, langName, potFile, poFile, callback ) {
+function msgmerge ( config, potFile, poFile, callback ) {
     var command = [
         'msgmerge',
         '--update',
@@ -225,12 +225,12 @@ function execPo ( config, done ) {
                     fs.exists(poFile, function ( exists ) {
                         if ( exists ) {
                             // merge existing pot and po files
-                            msgmerge(config, language, potFile, poFile, function () {
+                            msgmerge(config, potFile, poFile, function () {
                                 result(null);
                             });
                         } else {
                             // create a new lang file
-                            msginit(config, language, potFile, poFile, function () {
+                            msginit(config, potFile, poFile, language, function () {
                                 result(null);
                             });
                         }
@@ -251,13 +251,23 @@ function json ( config, done ) {
             jsonFile = path.join(config.target, language + '.json');
 
         return function ( result ) {
-            po2js(poFile, jsonFile, config.compact, function () {
-                result(null);
-            });
+            if ( fs.existsSync(poFile) ) {
+                po2js(poFile, jsonFile, config.compact, function () {
+                    result(null);
+                });
+            } else {
+                result(' doesn\'t exists: ' + poFile);
+            }
         };
-    }), done);
+    }), function ( error ) {
+        if ( error ) {
+            log.fail(error);
+            done(error);
+        } else {
+            done();
+        }
+    });
 }
-
 
 function build ( config, done ) {
     execPo(config, function () {

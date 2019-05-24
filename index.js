@@ -5,7 +5,8 @@
 
 'use strict';
 
-var fs     = require('fs'),
+const
+    fs     = require('fs'),
     path   = require('path'),
     exec   = require('child_process').exec,
     serial = require('cjs-async/serial'),
@@ -24,7 +25,8 @@ function standardChannelsHandle ( stdout, stderr ) {
 
 
 function po2js ( poFile, jsonFile, compact, callback ) {
-    var po       = require('gettext-parser').po.parse(fs.readFileSync(poFile, {encoding: 'utf8'})),
+    const
+        po       = require('gettext-parser').po.parse(fs.readFileSync(poFile, {encoding: 'utf8'})),
         contexts = po.translations,
         result   = {
             meta: {
@@ -65,20 +67,19 @@ function po2js ( poFile, jsonFile, compact, callback ) {
 
 
 function msginit ( config, potFile, poFile, language, callback ) {
-    var params = [
-            'msginit',
-            '--input="'  + potFile  + '"',
-            '--output="' + poFile   + '"',
-            '--locale="' + language + '"',
-            '--no-translator'
-        ],
-        command;
+    let command = [
+        'msginit',
+        '--input="'  + potFile  + '"',
+        '--output="' + poFile   + '"',
+        '--locale="' + language + '"',
+        '--no-translator'
+    ];
 
     // optional flags
-    if ( config.noWrap ) { params.push('--no-wrap'); }
+    config.noWrap && command.push('--no-wrap');
 
     // final exec line
-    command = params.join(' ');
+    command = command.join(' ');
 
     if ( config.verbose ) {
         log.info('exec', command);
@@ -105,7 +106,7 @@ function msginit ( config, potFile, poFile, language, callback ) {
 
 
 function msgmerge ( config, potFile, poFile, callback ) {
-    var command = [
+    let command = [
         'msgmerge',
         '--update',
         '--quiet',
@@ -114,11 +115,11 @@ function msgmerge ( config, potFile, poFile, callback ) {
     ];
 
     // optional flags
-    if ( config.indent     ) { command.push('--indent'); }
-    if ( config.noLocation ) { command.push('--no-location'); }
-    if ( config.noWrap     ) { command.push('--no-wrap'); }
-    if ( config.sortOutput ) { command.push('--sort-output'); }
-    if ( config.sortByFile ) { command.push('--sort-by-file'); }
+    config.indent     && command.push('--indent');
+    config.noLocation && command.push('--no-location');
+    config.noWrap     && command.push('--no-wrap');
+    config.sortOutput && command.push('--sort-output');
+    config.sortByFile && command.push('--sort-by-file');
 
     // merge
     command.push(poFile);
@@ -144,14 +145,26 @@ function msgmerge ( config, potFile, poFile, callback ) {
 
 
 function xgettext ( config, callback ) {
-    var dstFile = path.join(config.source, 'messages.pot'),
-        pkgPath = path.join(process.cwd(), 'package.json'),
-        pkgInfo, params, command;
+    const
+        dstFile = path.join(config.source, 'messages.pot'),
+        pkgPath = path.join(process.cwd(), 'package.json');
+
+    let pkgInfo, command;
+
+    function scanPath ( fsPath ) {
+        if ( fs.statSync(fsPath).isDirectory() ) {
+            fs.readdirSync(fsPath).forEach(function ( item ) {
+                scanPath(path.join(fsPath, item));
+            });
+        } else {
+            command.push(fsPath);
+        }
+    }
 
     delete require.cache[pkgPath];
     pkgInfo = require(pkgPath);
 
-    params = [
+    command = [
         'xgettext',
         '--force-po',
         '--output="' + dstFile + '"',
@@ -163,29 +176,19 @@ function xgettext ( config, callback ) {
     ];
 
     // optional flags
-    if ( config.indent      ) { params.push('--indent'); }
-    if ( config.noLocation  ) { params.push('--no-location'); }
-    if ( config.addLocation ) { params.push('--add-location=' + config.addLocation); }
-    if ( config.noWrap      ) { params.push('--no-wrap'); }
-    if ( config.sortOutput  ) { params.push('--sort-output'); }
-    if ( config.sortByFile  ) { params.push('--sort-by-file'); }
-    if ( config.addComments ) { params.push('--add-comments="' + config.addComments + '"'); }
-
-    function scanPath ( fsPath ) {
-        if ( fs.statSync(fsPath).isDirectory() ) {
-            fs.readdirSync(fsPath).forEach(function ( item ) {
-                scanPath(path.join(fsPath, item));
-            });
-        } else {
-            params.push(fsPath);
-        }
-    }
+    config.indent      && command.push('--indent');
+    config.noLocation  && command.push('--no-location');
+    config.addLocation && command.push('--add-location=' + config.addLocation);
+    config.noWrap      && command.push('--no-wrap');
+    config.sortOutput  && command.push('--sort-output');
+    config.sortByFile  && command.push('--sort-by-file');
+    config.addComments && command.push('--add-comments="' + config.addComments + '"');
 
     // add input files to the params
     config.jsData.forEach(scanPath);
 
     // final exec line
-    command = params.join(' ');
+    command = command.join(' ');
 
     if ( config.verbose ) {
         log.info('exec', command);
@@ -219,7 +222,7 @@ function execPo ( config, done ) {
             }
 
             serial(config.languages.map(function ( language ) {
-                var poFile = path.join(config.source, language + '.po');
+                const poFile = path.join(config.source, language + '.po');
 
                 return function ( result ) {
                     fs.exists(poFile, function ( exists ) {
@@ -247,7 +250,8 @@ function execPo ( config, done ) {
 
 function json ( config, done ) {
     serial(config.languages.map(function ( language ) {
-        var poFile   = path.join(config.source, language + '.po'),
+        const
+            poFile   = path.join(config.source, language + '.po'),
             jsonFile = path.join(config.target, language + '.json');
 
         return function ( result ) {
@@ -276,7 +280,7 @@ function build ( config, done ) {
 
 
 function clear ( config, done ) {
-    var files = [];
+    const files = [];
 
     config.languages.forEach(function ( language ) {
         files.push(path.join(config.target, language + '.json'));
@@ -287,7 +291,7 @@ function clear ( config, done ) {
 
 
 function generator ( config, options ) {
-    var tasks = {};
+    const tasks = {};
 
     // sanitize and extend defaults
     generator.config = config = Object.assign({

@@ -16,12 +16,12 @@
     },
     "dependencies": {
         "cjs-async": "^1.6.0",
-        "gettext-parser": "^3.1.0",
+        "gettext-parser": "^4.0.0",
         "runner-logger": "^1.0.1",
         "runner-tools": "^1.2.1"
     },
     "devDependencies": {
-        "cjs-eslint": "^1.1.1"
+        "cjs-eslint": "^1.2.4"
     },
     "keywords": [
         "task",

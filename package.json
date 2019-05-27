@@ -1,6 +1,6 @@
 {
     "name": "runner-generator-gettext",
-    "version": "1.4.1",
+    "version": "2.0.0",
     "description": "Tasks generator for gettext internationalization and localization system.",
     "author": {
         "name": "Stanislav Kalashnik",

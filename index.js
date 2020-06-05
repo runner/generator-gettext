@@ -38,8 +38,8 @@ function po2js ( poFile, jsonFile, compact, callback ) {
             data: {}
         };
 
-    if ( po.headers['plural-forms'] ) {
-        result.meta.plural = po.headers['plural-forms'].split('plural=').pop().replace(';', '');
+    if ( po.headers['Plural-Forms'] ) {
+        result.meta.plural = po.headers['Plural-Forms'].split('plural=').pop().replace(';', '');
     }
 
     // fill items

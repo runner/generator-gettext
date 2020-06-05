@@ -31,7 +31,7 @@ function po2js ( poFile, jsonFile, compact, callback ) {
         result   = {
             meta: {
                 charset:  po.charset,
-                project:  po.headers['project-id-version'],
+                project:  po.headers['Project-Id-Version'],
                 language: po.headers.language,
                 plural:   ''
             },

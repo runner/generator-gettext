@@ -115,11 +115,12 @@ function msgmerge ( config, potFile, poFile, callback ) {
     ];
 
     // optional flags
-    config.indent     && command.push('--indent');
-    config.noLocation && command.push('--no-location');
-    config.noWrap     && command.push('--no-wrap');
-    config.sortOutput && command.push('--sort-output');
-    config.sortByFile && command.push('--sort-by-file');
+    config.indent          && command.push('--indent');
+    config.noLocation      && command.push('--no-location');
+    config.noWrap          && command.push('--no-wrap');
+    config.sortOutput      && command.push('--sort-output');
+    config.sortByFile      && command.push('--sort-by-file');
+    config.noFuzzyMatching && command.push('--no-fuzzy-matching');
 
     // merge
     command.push(poFile);
